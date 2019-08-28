@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorRedDark"
+        android:fitsSystemWindows="true">
+
+    <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/ic_logo_c" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="8dp" android:layout_marginStart="8dp" android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="8dp"
+            app:layout_constraintTop_toTopOf="parent" app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintVertical_bias="0.196" android:id="@+id/imageView"/>
+    <Button
+            android:text="手机号登录"
+            android:layout_width="330dp"
+            android:layout_height="@dimen/height_button"
+            android:id="@+id/btn_login_tel" android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/btn_experience" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="8dp" android:layout_marginStart="8dp"
+            android:background="@drawable/bac_btn_1" android:layout_marginEnd="8dp"
+            app:layout_constraintEnd_toEndOf="parent" android:layout_marginRight="8dp" android:textColor="#FF4747"
+            app:layout_constraintHorizontal_bias="0.505" android:textSize="@dimen/menu_text_size"/>
+    <Button
+            android:text="立即体验"
+            android:layout_width="330dp"
+            android:layout_height="@dimen/height_button"
+            android:id="@+id/btn_experience" android:layout_marginBottom="84dp"
+            app:layout_constraintBottom_toTopOf="@+id/checkBox" app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp" android:layout_marginRight="8dp"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="8dp"
+            android:layout_marginStart="8dp" app:layout_constraintHorizontal_bias="0.505"
+            android:background="@drawable/bac_btn_2" android:textColor="@android:color/white"
+            android:textSize="@dimen/menu_text_size"/>
+    <CheckBox
+            android:text="同意用户协议和隐私政策"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/checkBox" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="8dp" android:layout_marginStart="8dp" android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent" android:shadowColor="@color/colorRedGray"
+            android:textColor="@color/colorRedGray" android:button="@drawable/bac_checkbox"/>
+    <Button
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:id="@+id/button3"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="8dp" android:layout_marginStart="8dp"
+            android:background="@drawable/bac_btn_wechat"
+            android:layout_marginEnd="8dp" android:layout_marginRight="8dp" app:layout_constraintHorizontal_bias="0.2"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/button2" app:layout_constraintVertical_bias="0.515"
+            app:layout_constraintBottom_toTopOf="@+id/checkBox" app:layout_constraintEnd_toEndOf="parent"/>
+    <Button
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:id="@+id/button4"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="8dp" android:layout_marginStart="8dp"
+            android:background="@drawable/bac_btn_qq"
+            android:layout_marginEnd="8dp" android:layout_marginRight="8dp" app:layout_constraintHorizontal_bias="0.4"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/button2" app:layout_constraintVertical_bias="0.515"
+            app:layout_constraintBottom_toTopOf="@+id/checkBox" app:layout_constraintEnd_toEndOf="parent"/>
+    <Button
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:id="@+id/button5"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="8dp" android:layout_marginStart="8dp"
+            android:background="@drawable/bac_btn_sina"
+            android:layout_marginEnd="8dp" android:layout_marginRight="8dp" app:layout_constraintHorizontal_bias="0.6"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/button2" app:layout_constraintVertical_bias="0.515"
+            app:layout_constraintBottom_toTopOf="@+id/checkBox" app:layout_constraintEnd_toEndOf="parent"/>
+    <Button
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:id="@+id/button6"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="8dp" android:layout_marginStart="8dp"
+            android:background="@drawable/bac_btn_netease" app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp" android:layout_marginRight="8dp" app:layout_constraintHorizontal_bias="0.8"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/button2" app:layout_constraintVertical_bias="0.515"
+            app:layout_constraintBottom_toTopOf="@+id/checkBox"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

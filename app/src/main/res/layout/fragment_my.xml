@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="30dp">
+        <TextView
+                android:text="歌单"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:id="@+id/tv_playlist_count"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"/>
+        <TextView
+                android:text="被收藏0次"
+                android:layout_weight="1"
+                android:gravity="right|center_vertical"
+                android:id="@+id/tv_collected_count"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"/>
+
+    </LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_playlist"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+</LinearLayout>
