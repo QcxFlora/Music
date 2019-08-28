@@ -24,11 +24,13 @@
             <TextView
                     android:id="@+id/tv_music_name_play"
                     android:textColor="#000"
+                    android:maxLines="1"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"/>
             <TextView
                     android:id="@+id/tv_ar_name"
+                    android:maxLines="1"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"/>

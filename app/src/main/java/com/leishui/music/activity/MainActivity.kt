@@ -110,7 +110,11 @@ class MainActivity : AppCompatActivity() {
         if (isBound){
             playerService.setListener(mediaPlayerListener)
             println(">>>>>>>>>>>>set")
-            返回时歌词不同步
+            val id = Model.getCurrentListIdByShared(this)!!
+            tracks = Model.getMusicListByShared(this,id)
+            position = Model.getStringByShared(this,"position")
+            track = tracks!!.get(position!!.toInt())
+            StringUtil.musicName(track!!,tv_musicname_main)
             Glide.with(this@MainActivity).load(Model.getStringByShared(this,"alUrl")).into(riv_al)
             isPlaying = playerService.isPlaying
             if (isPlaying) {

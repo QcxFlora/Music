@@ -12,7 +12,7 @@ class LoginActivity : AppCompatActivity(){
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login2)
+        setContentView(R.layout.activity_login)
         btn_login_tel.setOnClickListener { startActivity(Intent(this,LoginWithTelActivity::class.java)) }
     }
 }
