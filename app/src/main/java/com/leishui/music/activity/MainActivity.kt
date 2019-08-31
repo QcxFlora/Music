@@ -48,8 +48,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //registerReceiver()
-
         val nickname = Model.getUserInfoByShared(this, "nickname")
         val imageUrl = Model.getUserInfoByShared(this, "imageUrl")
         val headImageView = navigation_view.getHeaderView(0).findViewById<ImageView>(R.id.iv_head)
@@ -115,9 +113,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         ib_list.setOnClickListener {
-            //            if (playerService != null) {
-//                playerService!!.nextMusic()
-//            }
             showPopupWindow()
         }
 

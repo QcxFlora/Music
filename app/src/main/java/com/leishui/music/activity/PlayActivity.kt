@@ -7,7 +7,6 @@ import android.os.IBinder
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.leishui.music.Model
@@ -187,13 +186,6 @@ class PlayActivity : AppCompatActivity() {
         playerIntent.putExtra("position", position)
         startService(playerIntent)
         bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        //playerService.setListener(null)
-        println(">>>>>>>>>>>>>>>pause")
-        //unbindService(serviceConnection)
     }
 
     private fun formatTime(time: Int): String {

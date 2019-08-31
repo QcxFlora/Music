@@ -5,7 +5,6 @@ import android.content.Intent
 import android.media.AudioManager
 import android.media.MediaPlayer
 import java.io.IOException
-import android.util.Log
 import android.media.AudioAttributes
 import android.content.IntentFilter
 import android.content.BroadcastReceiver
@@ -15,7 +14,6 @@ import android.telephony.PhoneStateListener
 import com.leishui.music.Model
 import kotlin.concurrent.thread
 import android.widget.RemoteViews
-import android.annotation.TargetApi
 import android.app.*
 import android.graphics.BitmapFactory.decodeResource
 import com.leishui.music.R
@@ -36,8 +34,7 @@ import com.leishui.music.util.StringUtil
 
 
 class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
-    MediaPlayer.OnPreparedListener,
-    MediaPlayer.OnErrorListener, MediaPlayer.OnInfoListener, AudioManager.OnAudioFocusChangeListener {
+    MediaPlayer.OnPreparedListener, AudioManager.OnAudioFocusChangeListener {
 
 
     private var mediaPlayerListener: MediaPlayerListener? = null
@@ -60,10 +57,8 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
     private val iBinder = LocalBinder()
     private var mediaPlayer: MediaPlayer? = null
     private var mediaPath: String = ""
-    //Used to pause/resume MediaPlayer
     var resumePosition: Int = 0
     private lateinit var audioManager: AudioManager
-    //Handle incoming phone calls
     private var ongoingCall = false
     private var phoneStateListener: PhoneStateListener? = null
     private var telephonyManager: TelephonyManager? = null
@@ -115,7 +110,7 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
     }
 
 
-    fun setForeground2() {
+    private fun startMyOwnForeground2() {
         remoteViews = viewsAndIntents()
         notification = NotificationCompat.Builder(this, "1")
             .setContentTitle("Music")
@@ -166,21 +161,13 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
         return remoteView
     }
 
-    //The system calls this method when an activity, requests the service be started
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         val currentPosition = position
         val currentId = id
-        //An audio file is passed to the service through putExtra();
-        //mediaPath = intent.getStringExtra("url")!!
         position = intent.getStringExtra("position")!!.toInt()
         Model.saveStringByShared(this, "position", position.toString())
         id = Model.getCurrentListIdByShared(this)!!
         list = Model.getMusicListByShared(this, id!!)!!
-        //Request audio focus
-        //if (!requestAudioFocus()) {
-        //Could not gain focus
-//            pauseMedia()
-        //}
         if (id != currentId) {
             getUrl(list!!, position)
         } else {
@@ -227,7 +214,6 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
             mediaPlayer!!.release()
             mediaPlayer = null
         }
-        //removeAudioFocus()
     }
 
 
@@ -235,33 +221,7 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
         nextMusic()
     }
 
-    //Handle errors
-    override fun onError(mp: MediaPlayer, what: Int, extra: Int): Boolean {
-        //Invoked when there has been an error during an asynchronous operation
-        when (what) {
-            MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK -> Log.d(
-                "MediaPlayer Error",
-                "MEDIA ERROR NOT VALID FOR PROGRESSIVE PLAYBACK $extra"
-            )
-            MediaPlayer.MEDIA_ERROR_SERVER_DIED -> Log.d(
-                "MediaPlayer Error",
-                "MEDIA ERROR SERVER DIED $extra"
-            )
-            MediaPlayer.MEDIA_ERROR_UNKNOWN -> Log.d(
-                "MediaPlayer Error",
-                "MEDIA ERROR UNKNOWN $extra"
-            )
-        }
-        return false
-    }
-
-    override fun onInfo(mp: MediaPlayer, what: Int, extra: Int): Boolean {
-        //Invoked to communicate some info.
-        return false
-    }
-
     override fun onPrepared(mp: MediaPlayer) {
-        //Invoked when the media source is ready for playback.
         mediaPlayerListener?.onDurationChanged(mediaPlayer!!.duration)
         if (!isFirst) {
             playMedia()
@@ -272,28 +232,20 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
     }
 
     override fun onAudioFocusChange(focusState: Int) {
-        //Invoked when the audio focus of the system is updated.
         when (focusState) {
             AudioManager.AUDIOFOCUS_GAIN -> {
-                // resume playback
                 if (mediaPlayer == null)
                     initMediaPlayer()
                 else if (!mediaPlayer!!.isPlaying) mediaPlayer!!.start()
                 mediaPlayer!!.setVolume(1.0f, 1.0f)
             }
             AudioManager.AUDIOFOCUS_LOSS -> {
-                // Lost focus for an unbounded amount of time: stop playback and release media player
                 if (mediaPlayer!!.isPlaying) pauseMedia()
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                // Lost focus for a short time, but we have to stop
-                // playback. We don't release the media player because playback
-                // is likely to resume
                 if (mediaPlayer!!.isPlaying) pauseMedia()
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK ->
-                // Lost focus for a short time, but it's ok to keep playing
-                // at an attenuated level
                 if (mediaPlayer!!.isPlaying) mediaPlayer!!.setVolume(0.1f, 0.1f)
         }
     }
@@ -307,13 +259,11 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
         if (!mediaPlayer!!.isPlaying) {
             mediaPlayer!!.start()
             isPlaying = true
-
             if (Build.VERSION.SDK_INT >= 26) {
                 startMyOwnForeground()
             } else {
-                setForeground2()
+                startMyOwnForeground2()
             }
-
             refreshTextInRemoteViews(
                 R.id.tv_music_name_notification,
                 StringUtil.musicName(list!![position])
@@ -322,10 +272,7 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
                 R.id.ib_pap_notification,
                 R.drawable.ic_pause_circle_filled_black_24dp
             )
-
             mediaPlayerListener?.onStateChanged(isPlaying)
-
-            //sendMessage(4,1)
             thread(start = true) {
                 while (mediaPlayer != null && mediaPlayer!!.isPlaying) {
                     mediaPlayerListener?.onProgressChanged(mediaPlayer!!.currentPosition)
@@ -338,19 +285,15 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
 
     private fun stopMedia() {
         if (mediaPlayer!!.isPlaying) {
-            //sendMessage(4,0)
             mediaPlayer!!.stop()
         }
     }
 
     fun pauseMedia() {
         if (mediaPlayer!!.isPlaying) {
-            //sendMessage(4,0)
             mediaPlayer!!.pause()
             isPlaying = false
-
             mediaPlayerListener?.onStateChanged(isPlaying)
-
             refreshImageInRemoteViews(
                 R.id.ib_pap_notification,
                 R.drawable.ic_play_circle_filled_black_24dp
@@ -374,7 +317,6 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
             isNext = true
             isChanging = true
             getUrl(list!!, position)
-
             mediaPlayerListener?.onStateChanged(true)
         }
     }
@@ -386,25 +328,17 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
             isNext = false
             isChanging = true
             getUrl(list!!, position)
-
             mediaPlayerListener?.onStateChanged(true)
-
-            //sendMessage(4,1)
         }
     }
 
     private fun initMediaPlayer() {
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer()
-            //Set up MediaPlayer event listeners
             mediaPlayer!!.setOnCompletionListener(this)
-            mediaPlayer!!.setOnErrorListener(this)
             mediaPlayer!!.setOnPreparedListener(this)
-            mediaPlayer!!.setOnInfoListener(this)
         }
-        //Reset so that the MediaPlayer is not pointing to another data source
         mediaPlayer!!.reset()
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mediaPlayer!!.setAudioAttributes(
                 AudioAttributes.Builder()
@@ -414,7 +348,6 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
         } else
             mediaPlayer!!.setAudioStreamType(AudioManager.STREAM_MUSIC)
         try {
-            // Set the data source to the mediaFile location
             mediaPlayer!!.setDataSource(mediaPath)
         } catch (e: IOException) {
             e.printStackTrace()
@@ -452,11 +385,6 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
         return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
     }
 
-    private fun removeAudioFocus(): Boolean {
-        return AudioManager.AUDIOFOCUS_REQUEST_GRANTED == audioManager.abandonAudioFocus(this)
-    }
-
-    //Becoming noisy
     private val becomingNoisyReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             //pause audio on ACTION_AUDIO_BECOMING_NOISY
@@ -477,25 +405,23 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
         }
     }
 
-    private fun refreshImageInRemoteViews(id: Int, res: Int) {
-        remoteViews?.setImageViewResource(id, res)
+    private fun refreshImageInRemoteViews(resId: Int, res: Int) {
+        remoteViews?.setImageViewResource(resId, res)
         startForeground(1, notification)
     }
 
-    private fun refreshTextInRemoteViews(id: Int, text: CharSequence) {
-        remoteViews?.setTextViewText(id, text)
+    private fun refreshTextInRemoteViews(resId: Int, text: CharSequence) {
+        remoteViews?.setTextViewText(resId, text)
         startForeground(1, notification)
     }
 
 
     private fun registerBecomingNoisyReceiver() {
-        //register after getting audio focus
         val intentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
         registerReceiver(becomingNoisyReceiver, intentFilter)
     }
 
     private fun myReceiver() {
-        //register after getting audio focus
         val intentFilter = IntentFilter("playAndPauseMusic")
         val intentFilter2 = IntentFilter("previousMusic")
         val intentFilter3 = IntentFilter("nextMusic")
@@ -514,22 +440,16 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
         }, intentFilter3)
     }
 
-    //Handle incoming phone calls
     private fun callStateListener() {
-        // Get the telephony manager
         telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        //Starting listening for PhoneState changes
         phoneStateListener = object : PhoneStateListener() {
             override fun onCallStateChanged(state: Int, incomingNumber: String) {
                 when (state) {
-                    //if at least one call exists or the phone is ringing
-                    //pause the MediaPlayer
                     TelephonyManager.CALL_STATE_OFFHOOK, TelephonyManager.CALL_STATE_RINGING -> if (mediaPlayer != null) {
                         pauseMedia()
                         ongoingCall = true
                     }
                     TelephonyManager.CALL_STATE_IDLE ->
-                        // Phone idle. Start playing.
                         if (mediaPlayer != null) {
                             if (ongoingCall) {
                                 ongoingCall = false
@@ -539,8 +459,6 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
                 }
             }
         }
-        // Register the listener with the telephony manager
-        // Listen for changes to the device call mediaPlayerListener.
         telephonyManager?.listen(
             phoneStateListener,
             PhoneStateListener.LISTEN_CALL_STATE
