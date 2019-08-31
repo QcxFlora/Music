@@ -4,9 +4,9 @@
 
 **使用了：**
 
-使用了retrofit进行网络请求
-使用Shared Preference进行用户信息、登录状态、播放列表等的存取
-使用通知启动前台音乐播放服务
+# 使用了retrofit进行网络请求
+# 使用Shared Preference进行用户信息、登录状态、播放列表等的存取
+# 使用通知启动前台音乐播放服务
 使用pop up window进行当前播放列表的展示
 通知使用广播进行音乐播放控制
 监听audio focus的变化并作相应处理
