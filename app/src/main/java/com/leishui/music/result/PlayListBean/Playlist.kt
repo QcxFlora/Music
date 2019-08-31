@@ -1,7 +1,5 @@
 package com.leishui.music.result.PlayListBean
 
-import com.google.gson.annotations.SerializedName
-
 data class Playlist(
     val adType: Int,
     val anonimous: Boolean,
@@ -28,7 +26,7 @@ data class Playlist(
     val subscribed: Boolean,
     val subscribedCount: Int,
     val subscribers: List<Any>,
-    val tags: List<Any>,
+    val tags: List<String>,
     val totalDuration: Int,
     val trackCount: Int,
     val trackNumberUpdateTime: Long,

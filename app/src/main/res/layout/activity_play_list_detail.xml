@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/coordinator"
+        android:id="@+id/coordinator_detail"
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
@@ -20,7 +20,7 @@
                 android:layout_height="match_parent">
             <ImageView
                     android:fitsSystemWindows="true"
-                    android:id="@+id/image_background"
+                    android:id="@+id/iv_background_detail"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
@@ -35,7 +35,7 @@
 
     </com.google.android.material.appbar.AppBarLayout>
     <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_song"
+            android:id="@+id/rv_music_detail"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"/>

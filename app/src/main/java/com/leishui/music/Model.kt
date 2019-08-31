@@ -25,7 +25,7 @@ object Model {
         fun onFailed(t: Throwable)
     }
 
-    private val retrofit = Retrofit.Builder().baseUrl("http://39.100.233.149:3000/").addConverterFactory(
+    private val retrofit = Retrofit.Builder().baseUrl("http://39.100.233.149:3000").addConverterFactory(
         GsonConverterFactory.create()
     )
         .build()

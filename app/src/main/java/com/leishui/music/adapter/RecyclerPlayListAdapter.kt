@@ -7,15 +7,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.leishui.music.R
 import com.leishui.music.result.PlayListBean.Playlist
-import com.leishui.music.result.UserInfoBean.UserInfoBean
-import kotlinx.android.synthetic.main.fragment_my.view.*
 import kotlinx.android.synthetic.main.recycler_item_playlist.view.*
 
-class RecyclerPlayListAdapter : RecyclerView.Adapter<RecyclerPlayListAdapter.RecyclerHolder>() {
+open class RecyclerPlayListAdapter(private val type: Boolean, private val uid: Int) :
+    RecyclerView.Adapter<RecyclerPlayListAdapter.RecyclerHolder>() {
 
     var list = ArrayList<Playlist>()
 
-    private lateinit var onItemClickListener: OnItemClickListener
+    private var onItemClickListener: OnItemClickListener? = null
 
     fun setOnItemClickListener(listener: OnItemClickListener) {
         this.onItemClickListener = listener
@@ -44,30 +43,53 @@ class RecyclerPlayListAdapter : RecyclerView.Adapter<RecyclerPlayListAdapter.Rec
     }
 
     override fun getItemCount(): Int {
-        return list.size
+        val temp = getCount()
+        if (!type)
+            return temp
+        else
+            return list.size - temp
+    }
+
+    private fun getCount(): Int {
+        var temp = 0
+        for (i in 0 until list.size) {
+            if (list[i].creator.userId == uid) {
+                temp++
+            }
+        }
+        return temp
     }
 
     override fun onBindViewHolder(holder: RecyclerHolder, position: Int) {
-        val data = list[position]
+        var data = list[position]
+        if (type) {
+            data = list[position + getCount()]
+            holder.itemView.setOnClickListener {
+                onItemClickListener?.onItemClick(list, position + getCount())
+            }
+        } else holder.itemView.setOnClickListener {
+            onItemClickListener?.onItemClick(list, position)
+        }
+
         holder.playlistName.text = data.name
         Glide.with(holder.itemView).load(data.coverImgUrl).into(holder.img)
         val string: String
         var playCount = data.playCount.toString()
         if (playCount.length > 4)
-            playCount = playCount.substring(0, playCount.length - 4) + "." + playCount[playCount.length - 4] + "万"
+            playCount = playCount.substring(
+                0,
+                playCount.length - 4
+            ) + "." + playCount[playCount.length - 4] + "万"
         if (data.ordered)
             string = "${data.trackCount}首， by ${data.creator.nickname}， 播放${playCount}次"
         else
             string = "${data.trackCount}首， 播放${playCount}次"
         holder.musicCounts.text = string
-        holder.itemView.setOnClickListener {
-            onItemClickListener.onItemClick(list,position)
-        }
     }
 
     class RecyclerHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val img = itemView.image_playlist!!
-        val playlistName = itemView.tv_playlist_name!!
-        val musicCounts = itemView.tv_playlist_musiccount!!
+        val playlistName = itemView.tv_playlist_name_item!!
+        val musicCounts = itemView.tv_playlist_musicinfo_item!!
     }
 }

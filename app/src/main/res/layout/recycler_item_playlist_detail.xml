@@ -10,7 +10,7 @@
               android:paddingBottom="1dp"
               android:gravity="center_vertical">
     <TextView
-            android:id="@+id/tv_pos"
+            android:id="@+id/tv_pos_detail_item"
             android:text="1"
             android:gravity="center"
             android:layout_width="50dp"
@@ -21,7 +21,7 @@
             android:layout_height="60dp"
             android:orientation="vertical">
         <TextView
-                android:id="@+id/tv_song_name"
+                android:id="@+id/tv_name_detail_item"
                 android:text="11111111111"
                 android:layout_marginBottom="2dp"
                 android:textColor="#000"
@@ -30,7 +30,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
         <TextView
-                android:id="@+id/tv_song_info"
+                android:id="@+id/tv_music_info_detail_item"
                 android:text="11111111111"
                 android:textSize="@dimen/playlist_count_size"
                 android:maxLines="1"

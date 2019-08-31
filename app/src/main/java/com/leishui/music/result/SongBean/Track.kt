@@ -34,6 +34,6 @@ data class Track(
     val s_id: Int,
     val st: Int,
     val t: Int,
-    val tns: List<String>,
+    val tns: List<String>?,
     val v: Int
 )

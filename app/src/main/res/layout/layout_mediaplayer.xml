@@ -1,26 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="horizontal"
               android:layout_width="match_parent"
-              android:layout_height="100dp"
+              android:layout_height="wrap_content"
               android:gravity="center_vertical">
+    <TextView
+            android:id="@+id/tv_music_name_notification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:maxLines="1"
+            android:textColor="#000"
+            android:layout_toLeftOf="@id/iv_al_notification"
+            android:text="歌名"
+            android:layout_toStartOf="@id/iv_al_notification" />
+    <TextView
+            android:id="@+id/tv_lrc_notification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:layout_below="@id/tv_music_name_notification"
+            android:maxLines="1"
+            android:layout_toLeftOf="@id/iv_al_notification"
+            android:text="歌词"
+            android:layout_toStartOf="@id/iv_al_notification" />
     <ImageView
-            android:id="@+id/iv"
+            android:id="@+id/iv_al_notification"
             android:layout_width="100dp"
-            android:layout_height="match_parent"
-            android:src="@drawable/ic_splash"/>
-    <TextView
-            android:id="@+id/tv_play"
-            android:padding="20dp"
-            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:scaleType="centerCrop"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/ic_splash"
+            android:layout_alignParentEnd="true" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#000"
-            android:text="暂停"/>
-    <TextView
-            android:id="@+id/tv_pause"
-            android:padding="20dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#000"
-            android:text="暂停"/>
-</LinearLayout>
+            android:orientation="horizontal"
+            android:layout_toLeftOf="@id/iv_al_notification"
+            android:layout_below="@id/tv_lrc_notification"
+            android:layout_toStartOf="@id/iv_al_notification">
+        <ImageButton
+                android:id="@+id/ib_previous_notification"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:background="@null"
+                android:layout_weight="1"
+                android:scaleType="centerCrop"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:src="@drawable/ic_skip_previous_black_24dp" />
+
+        <ImageButton
+                android:id="@+id/ib_pap_notification"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:background="@null"
+                android:scaleType="centerCrop"
+                android:layout_weight="1"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:src="@drawable/ic_play_circle_filled_black_24dp" />
+        <ImageButton
+                android:id="@+id/ib_next_notification"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:background="@null"
+                android:layout_weight="1"
+                android:scaleType="centerCrop"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:src="@drawable/ic_skip_next_black_24dp" />
+
+    </LinearLayout>
+
+
+</RelativeLayout>

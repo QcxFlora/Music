@@ -16,7 +16,7 @@ data class Creator(
     val description: String,
     val detailDescription: String,
     val djStatus: Int,
-    val expertTags: Any,
+    val expertTags: List<String>,
     val experts: Any,
     val followed: Boolean,
     val gender: Int,

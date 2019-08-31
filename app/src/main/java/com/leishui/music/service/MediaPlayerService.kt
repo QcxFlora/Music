@@ -29,13 +29,15 @@ import retrofit2.Response
 import android.app.NotificationManager
 import android.app.NotificationChannel
 import android.graphics.Color
+import android.media.AudioFocusRequest
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.leishui.music.util.StringUtil
 
 
-class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener,
-    MediaPlayer.OnErrorListener, MediaPlayer.OnSeekCompleteListener, MediaPlayer.OnInfoListener,
-    MediaPlayer.OnBufferingUpdateListener, AudioManager.OnAudioFocusChangeListener {
+class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener,
+    MediaPlayer.OnPreparedListener,
+    MediaPlayer.OnErrorListener, MediaPlayer.OnInfoListener, AudioManager.OnAudioFocusChangeListener {
 
 
     private var mediaPlayerListener: MediaPlayerListener? = null
@@ -44,12 +46,16 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
         this.mediaPlayerListener = mediaPlayerListener
     }
 
-    private lateinit var list: List<Track>
+    private var remoteViews: RemoteViews? = null
+    private var notification: Notification? = null
+
+    private var list: List<Track>? = null
     private var position = -1
-    private var id = ""
+    private var id: String? = null
     private var isNext = true
-    var isPlaying = true
+    var isPlaying = false
     private var isChanging = false
+    private var isFirst = true
 
     private val iBinder = LocalBinder()
     private var mediaPlayer: MediaPlayer? = null
@@ -71,68 +77,51 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
         return super.onUnbind(intent)
     }
 
-    fun getDuration():Int?{
+
+    fun getDuration(): Int? {
         return mediaPlayer?.duration
     }
 
     override fun onCreate() {
         super.onCreate()
-        if (Build.VERSION.SDK_INT >= 26) {
-            startMyOwnForeground()
-        } else {
-            setForeground2()
-        }
+        registerBecomingNoisyReceiver()
+        callStateListener()
         myReceiver()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startMyOwnForeground() {
-        val NOTIFICATION_CHANNEL_ID = "com.example.simpleapp";
-        val channelName = "My Background Service";
-        val chan = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
-        chan.lightColor = Color.BLUE;
-        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE;
+        remoteViews = viewsAndIntents()
+        val NOTIFICATION_CHANNEL_ID = "com.example.simpleapp"
+        val channelName = "My Background Service"
+        val chan = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            channelName,
+            NotificationManager.IMPORTANCE_NONE
+        )
+        chan.lightColor = Color.BLUE
+        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        //assert manager != null;
-        manager.createNotificationChannel(chan);
-
-        val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
-        val notification = notificationBuilder.setOngoing(true)
+        manager.createNotificationChannel(chan)
+        val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+        notification = notificationBuilder.setOngoing(true)
             .setSmallIcon(R.drawable.ic_logo_r)
             .setContentTitle("App is running in background")
-            .setPriority(NotificationManager.IMPORTANCE_MIN)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            .build();
-        startForeground(2, notification);
-    }
-
-    @TargetApi(26)
-    fun setForeground() {
-        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-//        val channel = NotificationChannel("myChannel", "myChannel", NotificationManager.IMPORTANCE_HIGH)
-//        manager.createNotificationChannel(channel)
-        val channel2 = NotificationChannel("cnm", "cnm", NotificationManager.IMPORTANCE_HIGH)
-        manager.createNotificationChannel(channel2)
-
-        val remoteView = viewsAndIntents()
-
-        val notification = Notification.Builder(this, "1")
-            .setContentTitle("Music")
-            .setSmallIcon(R.drawable.ic_logo_c)
-            .setLargeIcon(decodeResource(resources, R.drawable.ic_logo_r))
-            .setCustomContentView(remoteView)
+            .setPriority(NotificationManager.IMPORTANCE_HIGH)
+            .setCategory(Notification.EXTRA_MEDIA_SESSION)
+            .setCustomContentView(remoteViews)
             .build()
         startForeground(1, notification)
     }
 
 
     fun setForeground2() {
-        val remoteView = viewsAndIntents()
-        val notification = NotificationCompat.Builder(this, "1")
+        remoteViews = viewsAndIntents()
+        notification = NotificationCompat.Builder(this, "1")
             .setContentTitle("Music")
             .setSmallIcon(R.drawable.ic_logo_c)
             .setLargeIcon(decodeResource(resources, R.drawable.ic_logo_r))
-            .setCustomContentView(remoteView)
+            .setCustomContentView(remoteViews)
             .build()
         startForeground(1, notification)
     }
@@ -140,28 +129,40 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
     private fun viewsAndIntents(): RemoteViews {
         val remoteView = RemoteViews(this.packageName, R.layout.layout_mediaplayer)
 
-        val intentStart = Intent("playMusic")
-        val startPendingIntent = PendingIntent.getBroadcast(
+        val intentStartAndPause = Intent("playAndPauseMusic")
+        val startAndPausePendingIntent = PendingIntent.getBroadcast(
             this,
             1,
-            intentStart,
+            intentStartAndPause,
             PendingIntent.FLAG_CANCEL_CURRENT
         )
 
-        remoteView.setOnClickPendingIntent(R.id.tv_play, startPendingIntent)
+        remoteView.setOnClickPendingIntent(R.id.ib_pap_notification, startAndPausePendingIntent)
 
-        val intentPause = Intent("pauseMusic")
-        val pausePendingIntent = PendingIntent.getBroadcast(
+
+        val intentPrevious = Intent("previousMusic")
+        val previousPendingIntent = PendingIntent.getBroadcast(
             this,
             1,
-            intentPause,
+            intentPrevious,
             PendingIntent.FLAG_CANCEL_CURRENT
         )
-        remoteView.setOnClickPendingIntent(R.id.tv_pause, pausePendingIntent)
+        remoteView.setOnClickPendingIntent(R.id.ib_previous_notification, previousPendingIntent)
+
+        val intentNext = Intent("nextMusic")
+        val nextPendingIntent = PendingIntent.getBroadcast(
+            this,
+            1,
+            intentNext,
+            PendingIntent.FLAG_CANCEL_CURRENT
+        )
+
+        remoteView.setOnClickPendingIntent(R.id.ib_next_notification, nextPendingIntent)
 
         val intent = Intent(this, PlayActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-        remoteView.setOnClickPendingIntent(R.id.iv, pendingIntent)
+        val pendingIntent =
+            PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        remoteView.setOnClickPendingIntent(R.id.iv_al_notification, pendingIntent)
         return remoteView
     }
 
@@ -174,17 +175,17 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
         position = intent.getStringExtra("position")!!.toInt()
         Model.saveStringByShared(this, "position", position.toString())
         id = Model.getCurrentListIdByShared(this)!!
-        list = Model.getMusicListByShared(this, id)!!
+        list = Model.getMusicListByShared(this, id!!)!!
         //Request audio focus
-        if (requestAudioFocus() === false) {
-            //Could not gain focus
-            stopSelf()
-        }
+        //if (!requestAudioFocus()) {
+        //Could not gain focus
+//            pauseMedia()
+        //}
         if (id != currentId) {
-            getUrl(list, position)
+            getUrl(list!!, position)
         } else {
             if (position != currentPosition)
-                getUrl(list, position)
+                getUrl(list!!, position)
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -192,7 +193,7 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
     private fun getUrl(list: List<Track>, position: Int) {
         Model.songUrl(list[position].id.toString(), object : Model.CallBack<SongUrlBean> {
             override fun onSuccess(response: Response<SongUrlBean>) {
-                val path = response.body()!!.data[0].url
+                val path = response.body()?.data?.get(0)?.url
                 if (path != null) {
                     val alUrl = list[position].al.picUrl
                     Model.saveStringByShared(this@MediaPlayerService, "alUrl", alUrl)
@@ -202,7 +203,8 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
                     isChanging = false
                 } else {
                     isChanging = false
-                    Toast.makeText(this@MediaPlayerService, "音乐已失效,已自动跳过", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MediaPlayerService, "音乐已失效,已自动跳过", Toast.LENGTH_SHORT)
+                        .show()
                     if (isNext)
                         nextMusic()
                     else
@@ -225,31 +227,12 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
             mediaPlayer!!.release()
             mediaPlayer = null
         }
-        removeAudioFocus()
+        //removeAudioFocus()
     }
 
-//    override fun onUnbind(intent: Intent?): Boolean {
-//        if (mediaPlayer != null) {
-//            stopMedia()
-//            mediaPlayer!!.release()
-//            mediaPlayer = null
-//        }
-//        removeAudioFocus()
-//        return super.onUnbind(intent)
-//    }
-
-    override fun onBufferingUpdate(mp: MediaPlayer, percent: Int) {
-        //Invoked indicating buffering status of
-        //a media resource being streamed over the network.
-    }
 
     override fun onCompletion(mp: MediaPlayer) {
-        println(">>>>>>>>>>>>>>>>>>>>>>>>>>>completion")
-        //Invoked when playback of a media source has completed.
         nextMusic()
-        //stopMedia()
-        //stop the service
-        //stopSelf()
     }
 
     //Handle errors
@@ -260,8 +243,14 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
                 "MediaPlayer Error",
                 "MEDIA ERROR NOT VALID FOR PROGRESSIVE PLAYBACK $extra"
             )
-            MediaPlayer.MEDIA_ERROR_SERVER_DIED -> Log.d("MediaPlayer Error", "MEDIA ERROR SERVER DIED $extra")
-            MediaPlayer.MEDIA_ERROR_UNKNOWN -> Log.d("MediaPlayer Error", "MEDIA ERROR UNKNOWN $extra")
+            MediaPlayer.MEDIA_ERROR_SERVER_DIED -> Log.d(
+                "MediaPlayer Error",
+                "MEDIA ERROR SERVER DIED $extra"
+            )
+            MediaPlayer.MEDIA_ERROR_UNKNOWN -> Log.d(
+                "MediaPlayer Error",
+                "MEDIA ERROR UNKNOWN $extra"
+            )
         }
         return false
     }
@@ -274,17 +263,12 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
     override fun onPrepared(mp: MediaPlayer) {
         //Invoked when the media source is ready for playback.
         mediaPlayerListener?.onDurationChanged(mediaPlayer!!.duration)
-        playMedia()
-//        val msg1 = Message()
-//        msg1.what = 0
-//        msg1.arg1 = mediaPlayer!!.duration
-//        handler?.sendMessage(msg1)
+        if (!isFirst) {
+            playMedia()
+        }
+        isFirst = false
+        sendBroadcast(Intent("prepared"))
         Model.saveStringByShared(this, "duration", mediaPlayer!!.duration.toString())
-    }
-
-    override fun onSeekComplete(mp: MediaPlayer) {
-        println(">>>>>>>>>>>>>>>>>>>>>>>>>>>SeekCompletion")
-        //Invoked indicating the completion of a seek operation.
     }
 
     override fun onAudioFocusChange(focusState: Int) {
@@ -299,15 +283,14 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
             }
             AudioManager.AUDIOFOCUS_LOSS -> {
                 // Lost focus for an unbounded amount of time: stop playback and release media player
-                if (mediaPlayer!!.isPlaying) mediaPlayer!!.stop()
-                mediaPlayer!!.release()
-                mediaPlayer = null
+                if (mediaPlayer!!.isPlaying) pauseMedia()
             }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ->
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                 // Lost focus for a short time, but we have to stop
                 // playback. We don't release the media player because playback
                 // is likely to resume
-                if (mediaPlayer!!.isPlaying) mediaPlayer!!.pause()
+                if (mediaPlayer!!.isPlaying) pauseMedia()
+            }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK ->
                 // Lost focus for a short time, but it's ok to keep playing
                 // at an attenuated level
@@ -325,6 +308,21 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
             mediaPlayer!!.start()
             isPlaying = true
 
+            if (Build.VERSION.SDK_INT >= 26) {
+                startMyOwnForeground()
+            } else {
+                setForeground2()
+            }
+
+            refreshTextInRemoteViews(
+                R.id.tv_music_name_notification,
+                StringUtil.musicName(list!![position])
+            )
+            refreshImageInRemoteViews(
+                R.id.ib_pap_notification,
+                R.drawable.ic_pause_circle_filled_black_24dp
+            )
+
             mediaPlayerListener?.onStateChanged(isPlaying)
 
             //sendMessage(4,1)
@@ -335,6 +333,7 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
                 }
             }
         }
+        requestAudioFocus()
     }
 
     private fun stopMedia() {
@@ -352,43 +351,31 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
 
             mediaPlayerListener?.onStateChanged(isPlaying)
 
+            refreshImageInRemoteViews(
+                R.id.ib_pap_notification,
+                R.drawable.ic_play_circle_filled_black_24dp
+            )
+
             resumePosition = mediaPlayer!!.currentPosition
         }
     }
 
     fun resumeMedia(resumePosition: Int) {
         mediaPlayer!!.seekTo(resumePosition)
-        //sendMessage(4,1)
         isPlaying = true
-
         mediaPlayerListener?.onStateChanged(isPlaying)
-
         playMedia()
     }
 
-    fun resumeMedia() {
-        if (!mediaPlayer!!.isPlaying) {
-            mediaPlayer!!.seekTo(resumePosition)
-            //sendMessage(4,1)
-            isPlaying = true
-
-            mediaPlayerListener?.onStateChanged(isPlaying)
-
-            mediaPlayer!!.start()
-        }
-    }
-
     fun nextMusic() {
-        if (position < list.size - 1 && !isChanging) {
+        if (position < list!!.size - 1 && !isChanging) {
             position += 1
             Model.saveStringByShared(this, "position", position.toString())
             isNext = true
             isChanging = true
-            getUrl(list, position)
+            getUrl(list!!, position)
 
             mediaPlayerListener?.onStateChanged(true)
-
-            //sendMessage(4,1)
         }
     }
 
@@ -398,7 +385,7 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
             Model.saveStringByShared(this, "position", position.toString())
             isNext = false
             isChanging = true
-            getUrl(list, position)
+            getUrl(list!!, position)
 
             mediaPlayerListener?.onStateChanged(true)
 
@@ -407,15 +394,14 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
     }
 
     private fun initMediaPlayer() {
-        if (mediaPlayer == null)
+        if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer()
-        //Set up MediaPlayer event listeners
-        mediaPlayer!!.setOnCompletionListener(this)
-        mediaPlayer!!.setOnErrorListener(this)
-        mediaPlayer!!.setOnPreparedListener(this)
-        mediaPlayer!!.setOnBufferingUpdateListener(this)
-        mediaPlayer!!.setOnSeekCompleteListener(this)
-        mediaPlayer!!.setOnInfoListener(this)
+            //Set up MediaPlayer event listeners
+            mediaPlayer!!.setOnCompletionListener(this)
+            mediaPlayer!!.setOnErrorListener(this)
+            mediaPlayer!!.setOnPreparedListener(this)
+            mediaPlayer!!.setOnInfoListener(this)
+        }
         //Reset so that the MediaPlayer is not pointing to another data source
         mediaPlayer!!.reset()
 
@@ -439,8 +425,30 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
     }
 
     private fun requestAudioFocus(): Boolean {
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+        val result: Int
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val mAudioAttributes =
+
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+
+            val mAudioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(mAudioAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener(this).build()
+
+            result = audioManager.requestAudioFocus(mAudioFocusRequest)
+        } else {
+            audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            result = audioManager.requestAudioFocus(
+                this,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+        }
         return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
     }
 
@@ -460,16 +468,25 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
     private val startReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             //pause audio on ACTION_AUDIO_BECOMING_NOISY
-            playMedia()
+            if (mediaPlayer!!.isPlaying) {
+                pauseMedia()
+            } else {
+                playMedia()
+            }
             //buildNotification(PlaybackStatus.PAUSED)
         }
     }
 
-    private val pauseReceiver = object : BroadcastReceiver() {
-        override fun onReceive(p0: Context?, p1: Intent?) {
-            pauseMedia()
-        }
+    private fun refreshImageInRemoteViews(id: Int, res: Int) {
+        remoteViews?.setImageViewResource(id, res)
+        startForeground(1, notification)
     }
+
+    private fun refreshTextInRemoteViews(id: Int, text: CharSequence) {
+        remoteViews?.setTextViewText(id, text)
+        startForeground(1, notification)
+    }
+
 
     private fun registerBecomingNoisyReceiver() {
         //register after getting audio focus
@@ -479,10 +496,22 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
 
     private fun myReceiver() {
         //register after getting audio focus
-        val intentFilter = IntentFilter("playMusic")
-        val intentFilter2 = IntentFilter("pauseMusic")
+        val intentFilter = IntentFilter("playAndPauseMusic")
+        val intentFilter2 = IntentFilter("previousMusic")
+        val intentFilter3 = IntentFilter("nextMusic")
         registerReceiver(startReceiver, intentFilter)
-        registerReceiver(pauseReceiver, intentFilter2)
+        registerReceiver(object : BroadcastReceiver() {
+            override fun onReceive(p0: Context?, p1: Intent?) {
+                previousMusic()
+            }
+
+        }, intentFilter2)
+        registerReceiver(object : BroadcastReceiver() {
+            override fun onReceive(p0: Context?, p1: Intent?) {
+                nextMusic()
+            }
+
+        }, intentFilter3)
     }
 
     //Handle incoming phone calls
@@ -504,7 +533,7 @@ class MediaPlayerService : Service(), MediaPlayer.OnCompletionListener, MediaPla
                         if (mediaPlayer != null) {
                             if (ongoingCall) {
                                 ongoingCall = false
-                                resumeMedia()
+                                playMedia()
                             }
                         }
                 }

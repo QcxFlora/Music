@@ -1,9 +1,6 @@
 package com.leishui.music.activity
 
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -29,15 +26,15 @@ class PlayActivity : AppCompatActivity() {
     private var isUser = false
     private var isPlaying = true
 
-    @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play)
+        registerReceiver()
         val imgUrl = getAndSave("alUrl")
         position = getAndSave("position")!!
         val track = Model.getCurrentTrackByShared(this, Model.getCurrentListIdByShared(this)!!,position)
         StringUtil.musicName(track!!,tv_music_name_play)
-        StringUtil.arName(track!!,tv_ar_name)
+        StringUtil.arName(track,tv_ar_name)
         Glide.with(this).load(imgUrl).into(allll as ImageView)
         playAudio()
         allll.startMusic()
@@ -97,15 +94,15 @@ class PlayActivity : AppCompatActivity() {
                     seekbar.max = duration
                 }
 
-                override fun onProgressChanged(position: Int) {
+                override fun onProgressChanged(progress: Int) {
                     runOnUiThread {
                         println("-------------------------->>>>>>>>>>>>>>>>>>>>>>>${position}")
                         if (!isUser) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                seekbar.setProgress(position, true)
+                                seekbar.setProgress(progress, true)
                             } else
-                                seekbar.progress = position
-                            pos.text = formatTime(position)
+                                seekbar.progress = progress
+                            pos.text = formatTime(progress)
                         }
                     }
                 }
@@ -192,20 +189,11 @@ class PlayActivity : AppCompatActivity() {
         bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        //if (serviceBound) {
-        //unbindService(serviceConnection)
-        //service is active
-        //playerService.stopSelf()
-        //}
-    }
-
     override fun onPause() {
         super.onPause()
-        playerService.setListener(null)
+        //playerService.setListener(null)
         println(">>>>>>>>>>>>>>>pause")
-        unbindService(serviceConnection)
+        //unbindService(serviceConnection)
     }
 
     private fun formatTime(time: Int): String {
@@ -216,6 +204,16 @@ class PlayActivity : AppCompatActivity() {
         if (second.length < 2)
             second = "0$second"
         return "$min:$second"
+    }
+
+    private fun registerReceiver(){
+        val intentFilter = IntentFilter("prepared")
+        registerReceiver(object : BroadcastReceiver() {
+            override fun onReceive(p0: Context?, p1: Intent?) {
+                playerService.playMedia()
+            }
+
+        }, intentFilter)
     }
 
 }

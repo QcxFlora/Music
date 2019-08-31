@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.widget.ImageView
 
+@SuppressLint("AppCompatCustomView")
 open class RoundImageView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ImageView(context, attrs, defStyleAttr) {
@@ -27,7 +28,7 @@ open class RoundImageView @JvmOverloads constructor(
                 val viewHeight = height
                 val viewMinSize = Math.min(viewWidth, viewHeight)
                 this.rawBitmap = rawBitmap
-                shader = BitmapShader(this.rawBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+                shader = BitmapShader(this.rawBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
                 mMatrix.setScale(
                     (viewMinSize / rawBitmap.width).toFloat(),
                     (viewMinSize / rawBitmap.height).toFloat()

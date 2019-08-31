@@ -21,11 +21,11 @@ class PlayListDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play_list_detail)
         val adapter = RecyclerPlayListDetailAdapter()
-        recycler_song.layoutManager = LinearLayoutManager(this)
-        recycler_song.adapter = adapter
+        rv_music_detail.layoutManager = LinearLayoutManager(this)
+        rv_music_detail.adapter = adapter
         val url = intent.getStringExtra("bacUrl")
         val id = intent.getStringExtra("id")!!
-        Glide.with(this).load(url).into(image_background)
+        Glide.with(this).load(url).into(iv_background_detail)
         val savedList = Model.getMusicListByShared(this, id)
         if (savedList != null)
             adapter.updateList(savedList)
@@ -48,8 +48,8 @@ class PlayListDetailActivity : AppCompatActivity() {
                 intent.putExtra("alUrl", list[position].al.picUrl)
                 Model.songUrl(list[position].id.toString(), object : Model.CallBack<SongUrlBean> {
                     override fun onSuccess(response: Response<SongUrlBean>) {
-                        val url = response.body()!!.data[0].url
-                        if (url != null) {
+                        val musicUrl: String? = response.body()?.data?.get(0)?.url
+                        if (musicUrl != null) {
                             Model.saveCurrentListIdByShared(this@PlayListDetailActivity, id)
                             intent.putExtra("position", position.toString())
                             startActivity(intent)

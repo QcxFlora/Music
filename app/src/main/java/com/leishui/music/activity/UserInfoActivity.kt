@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.MenuItem
 import com.bumptech.glide.Glide
 import com.leishui.music.R
-import com.leishui.music.adapter.MainViewPageAdapter
 import com.leishui.music.adapter.UserInfoViewPageAdapter
 import kotlinx.android.synthetic.main.activity_user_info.*
 
@@ -16,7 +15,7 @@ class UserInfoActivity : AppCompatActivity() {
         setContentView(R.layout.activity_user_info)
         setSupportActionBar(toolbar_userinfo)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        Glide.with(this).load(intent.getStringExtra("url")).into(image_background)
+        Glide.with(this).load(intent.getStringExtra("url")).into(iv_background_userinfo)
         viewpage_userinfo.adapter = UserInfoViewPageAdapter(supportFragmentManager)
         tab_userinfo.setupWithViewPager(viewpage_userinfo)
     }
