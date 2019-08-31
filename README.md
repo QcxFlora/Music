@@ -2,16 +2,16 @@
 ![界面2](https://github.com/leishui/Music/blob/master/app/src/main/img/2.gif)
 ![界面3](https://github.com/leishui/Music/blob/master/app/src/main/img/3.gif)
 
-**使用了：**
+##使用了：
 
 ### 使用了retrofit进行网络请求
-# 使用Shared Preference进行用户信息、登录状态、播放列表等的存取
-# 使用通知启动前台音乐播放服务
-使用pop up window进行当前播放列表的展示
-通知使用广播进行音乐播放控制
-监听audio focus的变化并作相应处理
-监听电话状态变化并作相应处理
-监听耳机插拔并作相应处理
+### 使用Shared Preference进行用户信息、登录状态、播放列表等的存取
+### 使用通知启动前台音乐播放服务
+### 使用pop up window进行当前播放列表的展示
+### 通知使用广播进行音乐播放控制
+### 监听audio focus的变化并作相应处理
+### 监听电话状态变化并作相应处理
+### 监听耳机插拔并作相应处理
 
 **实现了：**
 
