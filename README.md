@@ -1,7 +1,8 @@
 ![界面1](https://github.com/leishui/Music/blob/master/app/src/main/img/1.gif)
 ![界面2](https://github.com/leishui/Music/blob/master/app/src/main/img/2.gif)
 ![界面3](https://github.com/leishui/Music/blob/master/app/src/main/img/3.gif)
-#使用了：
+
+**使用了：**
 
 使用了retrofit进行网络请求
 使用Shared Preference进行用户信息、登录状态、播放列表等的存取
